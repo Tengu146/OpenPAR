@@ -11,6 +11,8 @@ class TransformerClassifier(nn.Module):
         super().__init__()
         self.clip_model, _ = clip.load("ViT-L/14", device=device,download_root=args.model_path) 
         self.clip_model=self.clip_model.float()
+        # Keep the large CLIP backbone fixed on low-memory devices such as Jetson.
+        self.clip_model.requires_grad_(False)
         self.device = device
         self.attr_num = attr_num
         self.attributes=attributes
@@ -33,14 +35,16 @@ class TransformerClassifier(nn.Module):
 
     def forward(self,imgs,input):
         b_s=imgs.shape[0]
-        ViT_image_features=self.clip_model.visual(imgs.type(self.clip_model.dtype))
+        with torch.no_grad():
+            ViT_image_features=self.clip_model.visual(imgs.type(self.clip_model.dtype))
         word2vector=self.forward_text()
         out,logits=self.decoder(input.to(self.device),ViT_image_features.to(self.device),word2vector,self.vocab_attr)
 
         return out,logits
 
     def forward_text(self):  
-        text_features = self.clip_model.encode_text(clip.tokenize(self.attributes).to(self.device)).to(self.device).float()     
+        with torch.no_grad():
+            text_features = self.clip_model.encode_text(clip.tokenize(self.attributes).to(self.device)).to(self.device).float()
         word2vector=dict(zip(self.attributes,text_features))#生成一个word2vector的dict
         word2vector.update(self.special_index2vector)
         return word2vector

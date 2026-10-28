@@ -77,14 +77,15 @@ def main(args):
     lr = args.lr
     epoch_num = args.epoch
     start_epoch=1
+    trainable_parameters = [p for p in model.parameters() if p.requires_grad]
     if args.optim == 'SGD' :
         optimizer = make_optimizer(model, lr=lr, weight_decay=args.weight_decay)
         print('The optimizer used SGD')
     elif args.optim == 'AdamW' :
-        optimizer = optim.AdamW(model.parameters(),lr=lr, weight_decay=args.weight_decay)
+        optimizer = optim.AdamW(trainable_parameters,lr=lr, weight_decay=args.weight_decay)
         print('The optimizer used AdamW')
     else :
-        optimizer = optim.Adam(model.parameters())
+        optimizer = optim.Adam(trainable_parameters,lr=lr, weight_decay=args.weight_decay)
         print('The optimizer used Adam')
     if args.use_class_weight :
         print('The loss function used NLL_loss with class weight')
