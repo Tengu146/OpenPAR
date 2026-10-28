@@ -11,8 +11,7 @@ from loss.CE_loss import *
 from models.base_block import *
 from tools.function import get_pedestrian_metrics,get_signle_metrics
 from tools.utils import time_str, set_seed
-from collections import Counter
-from torchtext.vocab import vocab
+from tools.vocabulary import attribute_vocab
 from CLIP.model import *
 set_seed(605)
 device = "cuda"
@@ -42,9 +41,7 @@ def main(args):
         print('Use Continuous Prompt!')
     else :
         print('Use Handcrafted Prompt!')
-    counter_attr = Counter()
-    counter_attr.update(train_set.attributes)
-    vocab_attr = vocab(counter_attr, min_freq=1, specials=( '<bos>', '<eos>', '<pad>'))
+    vocab_attr = attribute_vocab(train_set.attributes, specials=( '<bos>', '<eos>', '<pad>'))
     base_index2attr=dict(zip([i for i in range(len(train_set.attributes))],train_set.attributes))
     labels = train_set.label
     sample_weight = labels.mean(0)

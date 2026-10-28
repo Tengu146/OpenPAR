@@ -2,11 +2,11 @@ import os
 import numpy as np
 import random
 import pickle
+import argparse
 
 from easydict import EasyDict
 from scipy.io import loadmat
 
-from sentence_transformers import SentenceTransformer
 
 np.random.seed(0)
 random.seed(0)
@@ -27,12 +27,6 @@ def make_dir(path):
     else:
         os.mkdir(path)
 
-def get_label_embeds(labels):
-    model = SentenceTransformer('all-mpnet-base-v2')
-    embeddings = model.encode(labels)
-    return embeddings
-
-
 def generate_data_description(save_dir):
     """
     create a dataset description file, which consists of images, labels
@@ -52,8 +46,10 @@ def generate_data_description(save_dir):
     assert dataset.label.shape == (100000, 26)
     dataset.attr_name = [pa100k_data['attributes'][i][0][0] for i in range(26)]
 
-    dataset.attr_words = np.array(attr_words)
-    dataset.attr_vectors = get_label_embeds(attr_words)
+    dataset.attributes = list(attr_words)
+    dataset.neg_attr_words = []
+    dataset.expand_pos_attr_words = []
+    dataset.expand_neg_attr_words = []
 
     dataset.partition = EasyDict()
     dataset.partition.train = np.arange(0, 80000)  # np.array(range(80000))
@@ -69,5 +65,7 @@ def generate_data_description(save_dir):
 
 
 if __name__ == "__main__":
-    save_dir = '/dataset/PA100k/'
-    generate_data_description(save_dir)
+    parser = argparse.ArgumentParser(description="Build SequencePAR metadata for PA100K")
+    parser.add_argument("dataset_dir", help="PA100K directory containing annotation.mat and data/")
+    args = parser.parse_args()
+    generate_data_description(args.dataset_dir)

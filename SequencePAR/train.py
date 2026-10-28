@@ -17,12 +17,7 @@ from tools.function import get_pedestrian_metrics
 from tools.utils import time_str, save_ckpt, ReDirectSTD, set_seed, select_gpus
 from solver import make_optimizer
 from solver.scheduler_factory import create_scheduler,make_scheduler
-from collections import Counter
-from torchtext.vocab import vocab
-from decoder.transformer import CaptionTransformer
-from CLIP.clip import clip
-from CLIP.clip.model import *
-from decoder.decoders import DecoderLayer,Decoder
+from tools.vocabulary import attribute_vocab
 from tensorboardX import SummaryWriter
 from loss.NLL_loss import NLL_class_weight_loss
 set_seed(605)
@@ -71,9 +66,7 @@ def main(args):
     print(f'{args.train_split} set: {len(train_loader.dataset)}, '
           f'{args.valid_split} set: {len(valid_loader.dataset)}, '
           f'attr_num : {train_set.attr_num}')
-    counter_attr = Counter()
-    counter_attr.update(train_set.attributes)
-    vocab_attr = vocab(counter_attr, min_freq=1, specials=( '<bos>', '<eos>', '<pad>'))
+    vocab_attr = attribute_vocab(train_set.attributes, specials=( '<bos>', '<eos>', '<pad>'))
     base_index2attr=dict(zip([i for i in range(len(train_set.attributes))],train_set.attributes))
     labels = train_set.label
     sample_weight = labels.mean(0)
